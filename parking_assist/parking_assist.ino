@@ -62,6 +62,55 @@ bool beepState = false;
 
 /*******************************************************
 Function:
+initHardware()
+
+Purpose:
+Configures pin modes for the sensor, LEDs, and buzzer.
+*******************************************************/
+void initHardware()
+{
+  pinMode(TRIG, OUTPUT);
+  pinMode(ECHO, INPUT);
+
+  pinMode(GREEN_LED, OUTPUT);
+  pinMode(YELLOW_LED, OUTPUT);
+  pinMode(RED_LED, OUTPUT);
+
+  pinMode(BUZZER, OUTPUT);
+}
+
+/*******************************************************
+Function:
+initLCD()
+
+Purpose:
+Initializes the LCD and clears the screen.
+*******************************************************/
+void initLCD()
+{
+  lcd.begin(16,2);
+  lcd.clear();
+}
+
+/*******************************************************
+Function:
+displayStartupMessage()
+
+Purpose:
+Shows an introductory message for 2 seconds.
+*******************************************************/
+void displayStartupMessage()
+{
+  lcd.setCursor(0,0);
+  lcd.print("PARKING ASSIST");
+  lcd.setCursor(0,1);
+  lcd.print("Initializing");
+  delay(2000);
+  lcd.clear();
+}
+
+/*******************************************************
+Function:
 setup()
 
 Purpose:
@@ -79,25 +128,9 @@ LiquidCrystal library
 *******************************************************/
 void setup()
 {
-  pinMode(TRIG, OUTPUT);
-  pinMode(ECHO, INPUT);
-
-  pinMode(GREEN_LED, OUTPUT);
-  pinMode(YELLOW_LED, OUTPUT);
-  pinMode(RED_LED, OUTPUT);
-
-  pinMode(BUZZER, OUTPUT);
-
-  lcd.begin(16,2);
-
-  lcd.clear();
-  lcd.setCursor(0,0);
-  lcd.print("PARKING ASSIST");
-  lcd.setCursor(0,1);
-  lcd.print("Initializing");
-  delay(2000);
-
-  lcd.clear();
+  initHardware();
+  initLCD();
+  displayStartupMessage();
 }
 
 /*******************************************************
