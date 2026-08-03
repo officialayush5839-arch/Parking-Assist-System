@@ -55,6 +55,7 @@ const int BEEP_STOP_FREQ = 2000;
 // ---------------- Sensor Configuration ----------------
 const unsigned long SENSOR_TIMEOUT = 30000;
 const float SPEED_OF_SOUND_CM_PER_US = 0.0343;
+const float MAX_DISTANCE_CM = 400.0;
 
 // ---------------- Variables ----------------
 unsigned long previousBeep = 0;
@@ -198,7 +199,12 @@ float readDistance()
   if(duration == 0)
       return -1;
 
-  return duration * SPEED_OF_SOUND_CM_PER_US / 2.0;
+  float distance = duration * SPEED_OF_SOUND_CM_PER_US / 2.0;
+
+  if (distance > MAX_DISTANCE_CM)
+      return -1;
+
+  return distance;
 }
 
 /*******************************************************
