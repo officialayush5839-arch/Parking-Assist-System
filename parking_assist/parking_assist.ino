@@ -1,9 +1,17 @@
-/*
+/*******************************************************
 ==========================================================
-PARKING ASSIST SYSTEM
-CS220 Capstone Project
+Project Name: Parking Assist System
+Author: Vipul
+Platform: Arduino Uno
 
-Components
+Description:
+This project uses an HC-SR04 ultrasonic sensor to measure
+distance and provide visual and auditory feedback for parking
+assistance. It features a 16x2 LCD display, three LEDs
+(Green, Yellow, Red) for status indication, and a piezo buzzer
+for auditory warnings.
+
+Components:
 - Arduino Uno
 - HC-SR04 Ultrasonic Sensor
 - 16x2 LCD
@@ -12,10 +20,8 @@ Components
 - Yellow LED
 - Red LED
 - Piezo Buzzer
-
-Author: Vipul
 ==========================================================
-*/
+*******************************************************/
 
 #include <LiquidCrystal.h>
 
@@ -43,6 +49,23 @@ const int WARNING_LIMIT = 20;
 unsigned long previousBeep = 0;
 bool beepState = false;
 
+/*******************************************************
+Function:
+setup()
+
+Purpose:
+Initializes hardware pins, starts the LCD, and 
+displays an introductory message.
+
+Input:
+None
+
+Returns:
+None
+
+Dependencies:
+LiquidCrystal library
+*******************************************************/
 void setup()
 {
   pinMode(TRIG, OUTPUT);
@@ -66,6 +89,23 @@ void setup()
   lcd.clear();
 }
 
+/*******************************************************
+Function:
+loop()
+
+Purpose:
+Main execution loop. Measures distance, handles sensor
+errors, and updates outputs based on distance.
+
+Input:
+None
+
+Returns:
+None
+
+Dependencies:
+readDistance(), showSensorError(), updateLCD(), updateAlerts()
+*******************************************************/
 void loop()
 {
   float distance = readDistance();
@@ -82,9 +122,23 @@ void loop()
   delay(50);
 }
 
-//====================================================
-// Distance Function
-//====================================================
+/*******************************************************
+Function:
+readDistance()
+
+Purpose:
+Reads the HC-SR04 sensor and returns distance.
+
+Input:
+None
+
+Returns:
+Distance in centimeters.
+Returns -1 on timeout.
+
+Dependencies:
+pulseIn()
+*******************************************************/
 float readDistance()
 {
   digitalWrite(TRIG, LOW);
@@ -103,9 +157,23 @@ float readDistance()
   return duration * 0.0343 / 2.0;
 }
 
-//====================================================
-// LCD
-//====================================================
+/*******************************************************
+Function:
+updateLCD()
+
+Purpose:
+Updates the 16x2 LCD display with current distance and
+status text.
+
+Input:
+distance (float): Measured distance in centimeters.
+
+Returns:
+None
+
+Dependencies:
+LiquidCrystal library
+*******************************************************/
 void updateLCD(float distance)
 {
   lcd.setCursor(0,0);
@@ -128,9 +196,22 @@ void updateLCD(float distance)
       lcd.print("STOP!           ");
 }
 
-//====================================================
-// LED + Buzzer
-//====================================================
+/*******************************************************
+Function:
+updateAlerts()
+
+Purpose:
+Controls LEDs and Buzzer based on distance thresholds.
+
+Input:
+distance (float): Measured distance in centimeters.
+
+Returns:
+None
+
+Dependencies:
+beep()
+*******************************************************/
 void updateAlerts(float distance)
 {
   unsigned long currentTime = millis();
@@ -164,9 +245,25 @@ void updateAlerts(float distance)
   }
 }
 
-//====================================================
-// Beeper
-//====================================================
+/*******************************************************
+Function:
+beep()
+
+Purpose:
+Generates a non-blocking tone on the buzzer with a 
+specified interval and frequency.
+
+Input:
+now (unsigned long): Current time in milliseconds.
+interval (int): Time between toggles in milliseconds.
+frequency (int): Tone frequency in Hertz.
+
+Returns:
+None
+
+Dependencies:
+tone(), noTone()
+*******************************************************/
 void beep(unsigned long now,int interval,int frequency)
 {
   if(now-previousBeep>=interval)
@@ -182,9 +279,23 @@ void beep(unsigned long now,int interval,int frequency)
   }
 }
 
-//====================================================
-// Sensor Error
-//====================================================
+/*******************************************************
+Function:
+showSensorError()
+
+Purpose:
+Displays an error message on the LCD and turns off all
+LEDs and the buzzer.
+
+Input:
+None
+
+Returns:
+None
+
+Dependencies:
+LiquidCrystal library, noTone()
+*******************************************************/
 void showSensorError()
 {
   lcd.setCursor(0,0);
