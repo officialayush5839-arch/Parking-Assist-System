@@ -60,6 +60,8 @@ const float MAX_DISTANCE_CM = 400.0;
 // ---------------- Variables ----------------
 unsigned long previousBeep = 0;
 bool beepState = false;
+int lastDisplayedDistance = -1;
+int lastDisplayedState = -1;
 
 /*******************************************************
 Function:
@@ -155,7 +157,7 @@ void loop()
 {
   float distance = readDistance();
 
-  if(distance < 0)
+  if (distance < 0)
   {
     showSensorError();
     return;
@@ -196,7 +198,7 @@ float readDistance()
 
   long duration = pulseIn(ECHO, HIGH, SENSOR_TIMEOUT);
 
-  if(duration == 0)
+  if (duration == 0)
       return -1;
 
   float distance = duration * SPEED_OF_SOUND_CM_PER_US / 2.0;
@@ -226,24 +228,30 @@ LiquidCrystal library
 *******************************************************/
 void updateLCD(float distance)
 {
-  lcd.setCursor(0,0);
-  lcd.print("Dist:");
-  lcd.print((int)distance);
-  lcd.print(" cm   ");
+  int currentDistance = (int)distance;
+  int currentState;
 
-  lcd.setCursor(0,1);
+  if (distance > SAFE_LIMIT) currentState = 0;
+  else if (distance > CAUTION_LIMIT) currentState = 1;
+  else if (distance >= WARNING_LIMIT) currentState = 2;
+  else currentState = 3;
 
-  if(distance > SAFE_LIMIT)
-      lcd.print("SAFE            ");
+  if (currentDistance != lastDisplayedDistance || lastDisplayedState == 4) {
+    lcd.setCursor(0,0);
+    lcd.print("Dist:");
+    lcd.print(currentDistance);
+    lcd.print(" cm   ");
+    lastDisplayedDistance = currentDistance;
+  }
 
-  else if(distance > CAUTION_LIMIT)
-      lcd.print("CAUTION         ");
-
-  else if(distance >= WARNING_LIMIT)
-      lcd.print("WARNING         ");
-
-  else
-      lcd.print("STOP!           ");
+  if (currentState != lastDisplayedState) {
+    lcd.setCursor(0,1);
+    if (currentState == 0) lcd.print("SAFE            ");
+    else if (currentState == 1) lcd.print("CAUTION         ");
+    else if (currentState == 2) lcd.print("WARNING         ");
+    else lcd.print("STOP!           ");
+    lastDisplayedState = currentState;
+  }
 }
 
 /*******************************************************
@@ -266,33 +274,27 @@ void updateAlerts(float distance)
 {
   unsigned long currentTime = millis();
 
-  digitalWrite(GREEN_LED, LOW);
-  digitalWrite(YELLOW_LED, LOW);
-  digitalWrite(RED_LED, LOW);
+  bool greenOn = false;
+  bool yellowOn = false;
+  bool redOn = false;
 
-  if(distance > SAFE_LIMIT)
-  {
-      digitalWrite(GREEN_LED, HIGH);
+  if (distance > SAFE_LIMIT) {
+      greenOn = true;
       noTone(BUZZER);
-  }
-
-  else if(distance > CAUTION_LIMIT)
-  {
-      digitalWrite(YELLOW_LED, HIGH);
+  } else if (distance > CAUTION_LIMIT) {
+      yellowOn = true;
       beep(currentTime, BEEP_CAUTION_INTERVAL, BEEP_CAUTION_FREQ);
-  }
-
-  else if(distance >= WARNING_LIMIT)
-  {
-      digitalWrite(RED_LED, HIGH);
+  } else if (distance >= WARNING_LIMIT) {
+      redOn = true;
       beep(currentTime, BEEP_WARNING_INTERVAL, BEEP_WARNING_FREQ);
-  }
-
-  else
-  {
-      digitalWrite(RED_LED, HIGH);
+  } else {
+      redOn = true;
       tone(BUZZER, BEEP_STOP_FREQ);
   }
+
+  digitalWrite(GREEN_LED, greenOn ? HIGH : LOW);
+  digitalWrite(YELLOW_LED, yellowOn ? HIGH : LOW);
+  digitalWrite(RED_LED, redOn ? HIGH : LOW);
 }
 
 /*******************************************************
@@ -314,18 +316,18 @@ None
 Dependencies:
 tone(), noTone()
 *******************************************************/
-void beep(unsigned long now,int interval,int frequency)
+void beep(unsigned long now, int interval, int frequency)
 {
-  if(now-previousBeep>=interval)
+  if (now - previousBeep >= (unsigned long)interval)
   {
-      previousBeep=now;
+      previousBeep = now;
+      beepState = !beepState;
 
-      beepState=!beepState;
-
-      if(beepState)
-          tone(BUZZER,frequency);
-      else
+      if (beepState) {
+          tone(BUZZER, frequency);
+      } else {
           noTone(BUZZER);
+      }
   }
 }
 
@@ -348,14 +350,18 @@ LiquidCrystal library, noTone()
 *******************************************************/
 void showSensorError()
 {
-  lcd.setCursor(0,0);
-  lcd.print("Sensor Error   ");
-  lcd.setCursor(0,1);
-  lcd.print("Check Wiring   ");
+  if (lastDisplayedState != 4) {
+      lcd.setCursor(0, 0);
+      lcd.print("Sensor Error   ");
+      lcd.setCursor(0, 1);
+      lcd.print("Check Wiring   ");
+      lastDisplayedState = 4;
+      lastDisplayedDistance = -1;
+  }
 
-  digitalWrite(GREEN_LED,LOW);
-  digitalWrite(YELLOW_LED,LOW);
-  digitalWrite(RED_LED,LOW);
+  digitalWrite(GREEN_LED, LOW);
+  digitalWrite(YELLOW_LED, LOW);
+  digitalWrite(RED_LED, LOW);
 
   noTone(BUZZER);
 }
