@@ -45,6 +45,17 @@ const int SAFE_LIMIT = 100;
 const int CAUTION_LIMIT = 50;
 const int WARNING_LIMIT = 20;
 
+// ---------------- Alert Configurations ----------------
+const int BEEP_CAUTION_INTERVAL = 700;
+const int BEEP_CAUTION_FREQ = 1000;
+const int BEEP_WARNING_INTERVAL = 250;
+const int BEEP_WARNING_FREQ = 1500;
+const int BEEP_STOP_FREQ = 2000;
+
+// ---------------- Sensor Configuration ----------------
+const unsigned long SENSOR_TIMEOUT = 30000;
+const float SPEED_OF_SOUND_CM_PER_US = 0.0343;
+
 // ---------------- Variables ----------------
 unsigned long previousBeep = 0;
 bool beepState = false;
@@ -149,12 +160,12 @@ float readDistance()
 
   digitalWrite(TRIG, LOW);
 
-  long duration = pulseIn(ECHO, HIGH, 30000);
+  long duration = pulseIn(ECHO, HIGH, SENSOR_TIMEOUT);
 
   if(duration == 0)
       return -1;
 
-  return duration * 0.0343 / 2.0;
+  return duration * SPEED_OF_SOUND_CM_PER_US / 2.0;
 }
 
 /*******************************************************
@@ -229,19 +240,19 @@ void updateAlerts(float distance)
   else if(distance > CAUTION_LIMIT)
   {
       digitalWrite(YELLOW_LED, HIGH);
-      beep(currentTime,700,1000);
+      beep(currentTime, BEEP_CAUTION_INTERVAL, BEEP_CAUTION_FREQ);
   }
 
   else if(distance >= WARNING_LIMIT)
   {
       digitalWrite(RED_LED, HIGH);
-      beep(currentTime,250,1500);
+      beep(currentTime, BEEP_WARNING_INTERVAL, BEEP_WARNING_FREQ);
   }
 
   else
   {
       digitalWrite(RED_LED, HIGH);
-      tone(BUZZER,2000);
+      tone(BUZZER, BEEP_STOP_FREQ);
   }
 }
 
